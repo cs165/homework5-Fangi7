@@ -46,10 +46,30 @@ async function onPatch(req, res) {
   const column  = req.params.column;
   const value  = req.params.value;
   const messageBody = req.body;
-
+  const result = await sheet.getRows();
+  const rows = result.rows;
   // TODO(you): Implement onPatch.
-
-  res.json( { status: 'unimplemented'} );
+  var targetColumn;
+  var changeColumn;
+  var patchresult;
+    for(let i=0;i<rows[0].length;i++){
+        if(rows[0][i] == column) targetColumn = i;
+        if(rows[0][i] == Object.keys(messageBody)) changeColumn = i;
+    }
+    console.log(targetColumn);
+    console.log(changeColumn);
+    for(let i=0;i<rows.length;i++){
+        if(rows[i][targetColumn] == value){
+            rows[i][changeColumn] = messageBody[rows[0][changeColumn]];
+            console.log(rows[i]);
+            patchresult = await sheet.setRow(i,rows[i]);
+            break;
+        }
+    }
+  var resmessage;
+    if(typeof patchresult ==="undefined") resmessage = "success";
+    else resmessage = patchresult.response;
+  res.json( { response :  resmessage} );
 }
 app.patch('/api/:column/:value', jsonParser, onPatch);
 
