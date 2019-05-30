@@ -6,7 +6,7 @@ const key = require('./privateSettings.json');
 
 // TODO(you): Change the value of this string to the spreadsheet id for your
 // GSA spreadsheet. See HW5 spec for more information.
-const SPREADSHEET_ID = '__YOUR__SPREADSHEET__ID__HERE__';
+const SPREADSHEET_ID = '14oTop6F-yNIMZCiwdH-Rcu5ZRXt2lInhTOgrnBDdR6U';
 
 const app = express();
 const jsonParser = bodyParser.json();
@@ -21,16 +21,24 @@ async function onGet(req, res) {
 
   // TODO(you): Finish onGet.
 
-  res.json( { status: 'unimplemented'} );
+  res.json( { status: rows} );
 }
 app.get('/api', onGet);
 
 async function onPost(req, res) {
   const messageBody = req.body;
-
+    console.log(messageBody);
   // TODO(you): Implement onPost.
-
-  res.json( { status: 'unimplemented'} );
+  const result = await sheet.getRows();
+  const rows = result.rows;
+  var postresult = new Array();
+  for(let i=0;i<rows[0].length;i++){
+      postresult[i] = messageBody[rows[0][i]];
+  }
+  const presult = await sheet.appendRow(postresult);
+  //  if(typeof delresult ==="undefined") resmessage = "success";
+  //  else resmessage = delresult.response;
+  res.json( { response :  presult.response} );
 }
 app.post('/api', jsonParser, onPost);
 
@@ -48,10 +56,28 @@ app.patch('/api/:column/:value', jsonParser, onPatch);
 async function onDelete(req, res) {
   const column  = req.params.column;
   const value  = req.params.value;
-
+  console.log(column);
+  console.log(value);
+  const result = await sheet.getRows();
+  const rows = result.rows;
+  console.log(rows);
   // TODO(you): Implement onDelete.
-
-  res.json( { status: 'unimplemented'} );
+    var targetColumn;
+    var delresult;
+    for(let i=0;i<rows[0].length;i++){
+        if(rows[0][i] == column) targetColumn = i;
+    }
+    for(let i=0;i<rows.length;i++){
+        if(rows[i][targetColumn] == value){
+            delresult = await sheet.deleteRow(i);
+            break;
+        }
+    }
+    console.log(delresult);
+    var resmessage;
+    if(typeof delresult ==="undefined") resmessage = "success";
+    else resmessage = delresult.response;
+  res.json( { response :  resmessage} );
 }
 app.delete('/api/:column/:value',  onDelete);
 
