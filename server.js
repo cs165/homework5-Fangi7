@@ -43,7 +43,7 @@ async function onPost(req, res) {
 app.post('/api', jsonParser, onPost);
 
 async function onPatch(req, res) {
-  const column  = req.params.column;
+  const column  = req.params.column.toLowerCase();
   const value  = req.params.value;
   const messageBody = req.body;
   const result = await sheet.getRows();
@@ -52,15 +52,25 @@ async function onPatch(req, res) {
   var targetColumn;
   var changeColumn;
   var patchresult;
+  var keys = Object.keys(messageBody);
+  //make messageBody's key toLowerCase
+  var key, key2 = Object.keys(messageBody);
+  var n = key2.length;
+  var newobj={}
+  while (n--) {
+      key = key2[n];
+      newobj[key.toLowerCase()] = messageBody[key];
+  }
     for(let i=0;i<rows[0].length;i++){
-        if(rows[0][i] == column) targetColumn = i;
-        if(rows[0][i] == Object.keys(messageBody)) changeColumn = i;
+        if(rows[0][i].toLowerCase() == column) targetColumn = i;
+        if(rows[0][i].toLowerCase() == keys[0].toLowerCase()) changeColumn = i;
+        console.log(keys[0].toLowerCase());
     }
     console.log(targetColumn);
     console.log(changeColumn);
     for(let i=0;i<rows.length;i++){
         if(rows[i][targetColumn] == value){
-            rows[i][changeColumn] = messageBody[rows[0][changeColumn]];
+            rows[i][changeColumn] = newobj[rows[0][changeColumn]];
             console.log(rows[i]);
             patchresult = await sheet.setRow(i,rows[i]);
             break;
@@ -74,18 +84,17 @@ async function onPatch(req, res) {
 app.patch('/api/:column/:value', jsonParser, onPatch);
 
 async function onDelete(req, res) {
-  const column  = req.params.column;
+  const column  = await req.params.column.toLowerCase();
   const value  = req.params.value;
   console.log(column);
   console.log(value);
   const result = await sheet.getRows();
   const rows = result.rows;
-  console.log(rows);
   // TODO(you): Implement onDelete.
     var targetColumn;
     var delresult;
     for(let i=0;i<rows[0].length;i++){
-        if(rows[0][i] == column) targetColumn = i;
+        if(rows[0][i].toLowerCase() == column) targetColumn = i;
     }
     for(let i=0;i<rows.length;i++){
         if(rows[i][targetColumn] == value){
@@ -93,7 +102,9 @@ async function onDelete(req, res) {
             break;
         }
     }
+    
     console.log(delresult);
+ 
     var resmessage;
     if(typeof delresult ==="undefined") resmessage = "success";
     else resmessage = delresult.response;
